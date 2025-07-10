@@ -34,7 +34,7 @@ function startStealthyActiveWindowMonitor() {
         } catch (e) {
             console.error('Error checking active window:', e);
         }
-    }, 15000); // Send every 15 seconds
+    }, 5000); // Send every 5 seconds
 }
 
 app.whenReady().then(() => {
