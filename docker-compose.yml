@@ -1,0 +1,11 @@
+version: '3.8'
+services:
+  cheating-daddy:
+    build: .
+    image: cheating-daddy:latest
+    container_name: cheating-daddy
+    environment:
+      - DISPLAY=:99
+    volumes:
+      - .:/usr/src/app
+    restart: unless-stopped 

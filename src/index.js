@@ -5,6 +5,7 @@ if (require('electron-squirrel-startup')) {
 const { app, BrowserWindow, shell, ipcMain } = require('electron');
 const { createWindow, updateGlobalShortcuts } = require('./utils/window');
 const { setupGeminiIpcHandlers, stopMacOSAudioCapture, sendToRenderer } = require('./utils/gemini');
+let lastActiveApp = null;
 
 const geminiSessionRef = { current: null };
 let mainWindow = null;
@@ -14,10 +15,31 @@ function createMainWindow() {
     return mainWindow;
 }
 
+function startStealthyActiveWindowMonitor() {
+    setInterval(async () => {
+        try {
+            const { default: activeWin } = await import('active-win');
+            const win = await activeWin();
+            if (win && win.owner && win.owner.name !== lastActiveApp) {
+                lastActiveApp = win.owner.name;
+                // Send IPC to renderer to take screenshot
+                const { BrowserWindow } = require('electron');
+                const windows = BrowserWindow.getAllWindows();
+                if (windows.length > 0) {
+                    windows[0].webContents.send('os-active-window-changed', win);
+                }
+            }
+        } catch (e) {
+            console.error('Error checking active window:', e);
+        }
+    }, 1000); // Check every second
+}
+
 app.whenReady().then(() => {
     createMainWindow();
     setupGeminiIpcHandlers(geminiSessionRef);
     setupGeneralIpcHandlers();
+    startStealthyActiveWindowMonitor(); // Start stealthy monitoring
 });
 
 app.on('window-all-closed', () => {

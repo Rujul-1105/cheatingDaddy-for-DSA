@@ -365,6 +365,12 @@ export class CheatingDaddyApp extends LitElement {
                     viewContainer.classList.remove('entering');
                 });
             }
+
+            // Take a screenshot when the view changes
+            if (window.captureScreenshot) {
+                // Use the selected image quality from the app state
+                window.captureScreenshot(this.selectedImageQuality || 'medium', true);
+            }
         }
 
         // Only update localStorage when these specific properties change

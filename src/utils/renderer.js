@@ -427,6 +427,14 @@ async function captureScreenshot(imageQuality = 'medium', isManual = false) {
                     const imageTokens = tokenTracker.calculateImageTokens(offscreenCanvas.width, offscreenCanvas.height);
                     tokenTracker.addTokens(imageTokens, 'image');
                     console.log(`📊 Image sent successfully - ${imageTokens} tokens used (${offscreenCanvas.width}x${offscreenCanvas.height})`);
+
+                    // After screenshot, send MCQ prompt if isManual or if triggered by OS window change
+                    if (isManual || window._lastScreenshotWasOsWindowChange) {
+                        await sendTextMessage(
+                            'If there are MCQs visible in the screenshot, answer them: only give the correct option and a short explanation. If there are multiple MCQs, answer all. If there are no MCQs, answer any question you find. If no question is found, return: no question found.'
+                        );
+                        window._lastScreenshotWasOsWindowChange = false;
+                    }
                 } else {
                     console.error('Failed to send image:', result.error);
                 }
@@ -452,6 +460,7 @@ async function captureManualScreenshot(imageQuality = null) {
 
 // Expose functions to global scope for external access
 window.captureManualScreenshot = captureManualScreenshot;
+window.captureScreenshot = captureScreenshot;
 
 function stopCapture() {
     if (screenshotInterval) {
@@ -665,3 +674,10 @@ window.cheddar = {
     isMacOS: isMacOS,
     e: cheddarElement,
 };
+
+ipcRenderer.on('os-active-window-changed', (event, win) => {
+    if (window.captureScreenshot) {
+        window._lastScreenshotWasOsWindowChange = true;
+        window.captureScreenshot(currentImageQuality || 'medium', true);
+    }
+});
