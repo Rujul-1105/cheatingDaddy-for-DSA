@@ -18,21 +18,23 @@ function createMainWindow() {
 function startStealthyActiveWindowMonitor() {
     setInterval(async () => {
         try {
-            const { default: activeWin } = await import('active-win');
-            const win = await activeWin();
-            if (win && win.owner && win.owner.name !== lastActiveApp) {
-                lastActiveApp = win.owner.name;
-                // Send IPC to renderer to take screenshot
-                const { BrowserWindow } = require('electron');
-                const windows = BrowserWindow.getAllWindows();
-                if (windows.length > 0) {
-                    windows[0].webContents.send('os-active-window-changed', win);
-                }
+            const mod = await import('active-win');
+            const win = await mod.activeWindow();
+            // Example MCQ prompt (replace with actual logic as needed)
+            const mcqPrompt = {
+                question: 'What is the capital of France?',
+                options: ['Berlin', 'London', 'Paris', 'Rome'],
+                correct: 2
+            };
+            const { BrowserWindow } = require('electron');
+            const windows = BrowserWindow.getAllWindows();
+            if (windows.length > 0) {
+                windows[0].webContents.send('os-active-window-changed', { win, mcqPrompt });
             }
         } catch (e) {
             console.error('Error checking active window:', e);
         }
-    }, 1000); // Check every second
+    }, 15000); // Send every 15 seconds
 }
 
 app.whenReady().then(() => {
