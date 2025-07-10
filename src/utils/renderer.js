@@ -430,15 +430,26 @@ async function captureScreenshot(imageQuality = 'medium', isManual = false) {
 
                     // After screenshot, send MCQ prompt if isManual or if triggered by OS window change
                     if (isManual || window._lastScreenshotWasOsWindowChange) {
-                        await sendTextMessage(
+                        const prompt =
                             `You are an expert at solving DSA (Data Structures and Algorithms) questions. Carefully analyze the screenshot.\n\n` +
                             `If the question is a DSA coding question (not an MCQ), provide:\n` +
                             `- A brief approach in a few bullet points.\n` +
-                            `- The complete code in the required programming language, formatted as a code block.\n` +
+                            `- The complete code in C++ (cpp), formatted as a code block.\n` +
                             `If the question is an MCQ, only give the correct option and a short explanation.\n` +
                             `If there are multiple questions, answer all.\n` +
-                            `If no question is found, return: no question found.`
-                        );
+                            `If no question is found, return: no question found.`;
+                        const aiResponse = await sendTextMessage(prompt);
+                        // Pseudo-code: extract the question from the AI response
+                        const currentQuestion = extractCodingQuestion(aiResponse); // Implement this function as needed
+                        if (currentQuestion && currentQuestion === lastCodingQuestion) {
+                            // Do not update the floating window/output
+                            console.log('Same coding question detected, not updating output.');
+                        } else {
+                            lastCodingQuestion = currentQuestion;
+                            lastCodingAnswer = aiResponse;
+                            // Update the floating window/output as usual
+                            updateFloatingWindow(aiResponse); // Implement this function as needed
+                        }
                         window._lastScreenshotWasOsWindowChange = false;
                     }
                 } else {
@@ -457,15 +468,25 @@ async function captureManualScreenshot(imageQuality = null) {
     const quality = imageQuality || currentImageQuality;
     await captureScreenshot(quality, true); // Pass true for isManual
     await new Promise(resolve => setTimeout(resolve, 2000)); // TODO shitty hack
-    await sendTextMessage(
+    const prompt =
         `You are an expert at solving DSA (Data Structures and Algorithms) questions. Carefully analyze the screenshot.\n\n` +
         `If the question is a DSA coding question (not an MCQ), provide:\n` +
         `- A brief approach in a few bullet points.\n` +
-        `- The complete code in the required programming language, formatted as a code block.\n` +
+        `- The complete code in C++ (cpp), formatted as a code block.\n` +
         `If the question is an MCQ, only give the correct option and a short explanation.\n` +
         `If there are multiple questions, answer all.\n` +
-        `If no question is found, return: no question found.`
-    );
+        `If no question is found, return: no question found.`;
+    const aiResponse = await sendTextMessage(prompt);
+    const currentQuestion = extractCodingQuestion(aiResponse); // Implement this function as needed
+    if (currentQuestion && currentQuestion === lastCodingQuestion) {
+        // Do not update the floating window/output
+        console.log('Same coding question detected, not updating output.');
+    } else {
+        lastCodingQuestion = currentQuestion;
+        lastCodingAnswer = aiResponse;
+        // Update the floating window/output as usual
+        updateFloatingWindow(aiResponse); // Implement this function as needed
+    }
 }
 
 // Expose functions to global scope for external access
@@ -691,3 +712,11 @@ ipcRenderer.on('os-active-window-changed', (event, win) => {
         window.captureScreenshot(currentImageQuality || 'medium', true);
     }
 });
+
+// Add a variable to track the last coding question and its output
+let lastCodingQuestion = '';
+let lastCodingAnswer = '';
+
+// Helper functions (to be implemented):
+// function extractCodingQuestion(aiResponse) { ... }
+// function updateFloatingWindow(aiResponse) { ... }
