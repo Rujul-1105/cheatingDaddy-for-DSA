@@ -431,7 +431,13 @@ async function captureScreenshot(imageQuality = 'medium', isManual = false) {
                     // After screenshot, send MCQ prompt if isManual or if triggered by OS window change
                     if (isManual || window._lastScreenshotWasOsWindowChange) {
                         await sendTextMessage(
-                            'If there are MCQs visible in the screenshot, answer them: only give the correct option and a short explanation. If there are multiple MCQs, answer all. If there are no MCQs, answer any question you find. If no question is found, return: no question found.'
+                            `You are an expert at solving DSA (Data Structures and Algorithms) questions. Carefully analyze the screenshot.\n\n` +
+                            `If the question is a DSA coding question (not an MCQ), provide:\n` +
+                            `- A brief approach in a few bullet points.\n` +
+                            `- The complete code in the required programming language, formatted as a code block.\n` +
+                            `If the question is an MCQ, only give the correct option and a short explanation.\n` +
+                            `If there are multiple questions, answer all.\n` +
+                            `If no question is found, return: no question found.`
                         );
                         window._lastScreenshotWasOsWindowChange = false;
                     }
@@ -451,11 +457,15 @@ async function captureManualScreenshot(imageQuality = null) {
     const quality = imageQuality || currentImageQuality;
     await captureScreenshot(quality, true); // Pass true for isManual
     await new Promise(resolve => setTimeout(resolve, 2000)); // TODO shitty hack
-    await sendTextMessage(`Help me on this page, give me the answer no bs, complete answer.
-        So if its a code question, give me the approach in few bullet points, then the entire code. Also if theres anything else i need to know, tell me.
-        If its a question about the website, give me the answer no bs, complete answer.
-        If its a mcq question, give me the answer no bs, complete answer.
-        `);
+    await sendTextMessage(
+        `You are an expert at solving DSA (Data Structures and Algorithms) questions. Carefully analyze the screenshot.\n\n` +
+        `If the question is a DSA coding question (not an MCQ), provide:\n` +
+        `- A brief approach in a few bullet points.\n` +
+        `- The complete code in the required programming language, formatted as a code block.\n` +
+        `If the question is an MCQ, only give the correct option and a short explanation.\n` +
+        `If there are multiple questions, answer all.\n` +
+        `If no question is found, return: no question found.`
+    );
 }
 
 // Expose functions to global scope for external access
